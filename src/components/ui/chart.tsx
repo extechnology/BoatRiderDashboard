@@ -106,12 +106,12 @@ const ChartTooltipContent = React.forwardRef<
   (
     {
       active,
-      payload,
+      payload = [] as any[],
       className,
       indicator = "dot",
       hideLabel = false,
       hideIndicator = false,
-      label,
+      label = "",
       labelFormatter,
       labelClassName,
       formatter,
@@ -243,7 +243,8 @@ const ChartLegend = RechartsPrimitive.Legend;
 const ChartLegendContent = React.forwardRef<
   HTMLDivElement,
   React.ComponentProps<"div"> &
-    Pick<RechartsPrimitive.LegendProps, "payload" | "verticalAlign"> & {
+    Pick<RechartsPrimitive.LegendProps, "verticalAlign"> & {
+      payload?: any[];
       hideIcon?: boolean;
       nameKey?: string;
     }
@@ -264,8 +265,8 @@ const ChartLegendContent = React.forwardRef<
       )}
     >
       {payload
-        .filter((item) => item.type !== "none")
-        .map((item) => {
+        .filter((item: any) => item.type !== "none")
+        .map((item: any) => {
           const key = `${nameKey || item.dataKey || "value"}`;
           const itemConfig = getPayloadConfigFromPayload(config, item, key);
 

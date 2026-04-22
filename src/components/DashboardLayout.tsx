@@ -1,4 +1,4 @@
-import { Link, useLocation } from "@tanstack/react-router";
+import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import {
   LayoutDashboard,
   ShoppingCart,
@@ -12,10 +12,11 @@ import {
   Sun,
   Moon,
   Menu,
-  X,
   Bike,
+  LogOut,
 } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
+import { useAuth } from "@/hooks/use-auth";
 import { useState } from "react";
 
 const navItems = [
@@ -31,9 +32,16 @@ const navItems = [
 ];
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, admin, logout } = useAuth();
+  const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  if (!isAuthenticated) {
+    navigate({ to: "/login" });
+    return null;
+  }
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -78,12 +86,22 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         </nav>
 
         <div className="border-t border-border p-3">
+          <div className="mb-2 px-3 py-1">
+            <p className="truncate text-xs font-medium text-foreground">{admin?.email}</p>
+          </div>
           <button
             onClick={toggleTheme}
             className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
           >
             {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             {theme === "dark" ? "Light Mode" : "Dark Mode"}
+          </button>
+          <button
+            onClick={() => { logout(); navigate({ to: "/login" }); }}
+            className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm text-destructive transition-colors hover:bg-destructive/10"
+          >
+            <LogOut className="h-4 w-4" />
+            Sign Out
           </button>
         </div>
       </aside>

@@ -1,8 +1,11 @@
 import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
 import { ThemeProvider } from "@/hooks/use-theme";
 import { AuthProvider } from "@/hooks/use-auth";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import appCss from "../styles.css?url";
+
+const queryClient = new QueryClient();
 
 function NotFoundComponent() {
   return (
@@ -31,13 +34,13 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "CycleHub — E-commerce Dashboard" },
-      { property: "og:title", content: "CycleHub Dashboard" },
+      { title: "Boatrider Dashboard" },
+      { name: "description", content: "Boatrider — E-commerce Dashboard" },
+      { property: "og:title", content: "Boatrider Dashboard" },
       { property: "og:description", content: "Manage your cycle shop" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:site", content: "@boatrider.in" },
     ],
     links: [
       {
@@ -67,10 +70,12 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <Outlet />
-      </AuthProvider>
-    </ThemeProvider>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
+        <AuthProvider>
+          <Outlet />
+        </AuthProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
   );
 }

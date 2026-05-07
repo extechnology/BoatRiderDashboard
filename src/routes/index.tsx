@@ -2,7 +2,7 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { StatCard } from "@/components/StatCard";
 import { ExportToolbar } from "@/components/ExportToolbar";
 import { orders, salesData } from "@/lib/mock-data";
-import { DollarSign, ShoppingCart, Package, Users, TrendingUp } from "lucide-react";
+import { IndianRupee, ShoppingCart, Package, Users, TrendingUp } from "lucide-react";
 import {
   AreaChart,
   Area,
@@ -30,12 +30,12 @@ function Index() {
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
-          <p className="text-sm text-muted-foreground">Welcome back to CycleHub</p>
+          <p className="text-sm text-muted-foreground">Welcome back to BoatRider</p>
         </div>
 
         {/* Stats */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard icon={DollarSign} title="Total Revenue" value={`$${(totalSales / 1000).toFixed(0)}K`} change="+12.5% from last month" changeType="positive" />
+          <StatCard icon={IndianRupee} title="Total Revenue" value={`₹${(totalSales / 1000).toFixed(0)}K`} change="+12.5% from last month" changeType="positive" />
           <StatCard icon={ShoppingCart} title="Orders" value={String(totalOrders)} change="+8.2% from last month" changeType="positive" />
           <StatCard icon={Package} title="Products" value="8" change="2 low stock" changeType="negative" />
           <StatCard icon={Users} title="Customers" value="6" change="+3 this month" changeType="positive" />
@@ -55,7 +55,7 @@ function Index() {
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.25 0.02 260)" />
                 <XAxis dataKey="month" stroke="oklch(0.60 0.02 260)" fontSize={12} />
-                <YAxis stroke="oklch(0.60 0.02 260)" fontSize={12} tickFormatter={(v) => `$${v / 1000}K`} />
+                <YAxis stroke="oklch(0.60 0.02 260)" fontSize={12} tickFormatter={(v) => `₹${v / 1000}K`} />
                 <Tooltip contentStyle={{ backgroundColor: "oklch(0.17 0.02 260)", border: "1px solid oklch(0.25 0.02 260)", borderRadius: 8, color: "oklch(0.93 0.01 260)" }} />
                 <Area type="monotone" dataKey="sales" stroke="oklch(0.75 0.15 185)" fillOpacity={1} fill="url(#colorSales)" strokeWidth={2} />
               </AreaChart>
@@ -99,7 +99,7 @@ function Index() {
                     <td className="px-5 py-3 font-mono text-foreground">{o.id}</td>
                     <td className="px-5 py-3 text-foreground">{o.customer}</td>
                     <td className="px-5 py-3 text-muted-foreground">{o.product}</td>
-                    <td className="px-5 py-3 text-foreground">${o.amount.toLocaleString()}</td>
+                    <td className="px-5 py-3 text-foreground">₹{o.amount.toLocaleString()}</td>
                     <td className="px-5 py-3">
                       <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
                         o.status === "completed" ? "bg-success/10 text-success" :

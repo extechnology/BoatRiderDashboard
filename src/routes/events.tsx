@@ -1,22 +1,42 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { events } from "@/lib/mock-data";
-import { Calendar } from "lucide-react";
+import { Search, Calendar } from "lucide-react";
 
 export const Route = createFileRoute("/events")({
   component: EventsPage,
 });
 
 function EventsPage() {
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredEvents = events.filter((e) => 
+    e.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    e.location.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Events</h1>
-          <p className="text-sm text-muted-foreground">{events.length} events</p>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Events</h1>
+            <p className="text-sm text-muted-foreground">{filteredEvents.length} events</p>
+          </div>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder="Search events..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="h-9 w-full rounded-md border border-input bg-transparent pl-9 pr-4 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring sm:w-64"
+            />
+          </div>
         </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {events.map((e) => (
+          {filteredEvents.map((e) => (
             <div key={e.id} className="rounded-lg border border-border bg-card p-5">
               <div className="flex items-center gap-3">
                 <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${

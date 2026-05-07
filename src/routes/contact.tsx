@@ -1,4 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
+import { Search } from "lucide-react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { ExportToolbar } from "@/components/ExportToolbar";
 import { contacts } from "@/lib/mock-data";
@@ -8,15 +10,35 @@ export const Route = createFileRoute("/contact")({
 });
 
 function ContactPage() {
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredContacts = contacts.filter((c) => 
+    c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    c.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    c.subject.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="text-2xl font-bold text-foreground">Contact Messages</h1>
-            <p className="text-sm text-muted-foreground">{contacts.length} messages</p>
+            <p className="text-sm text-muted-foreground">{filteredContacts.length} messages</p>
           </div>
-          <ExportToolbar data={contacts as any} filename="contacts" />
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <input
+                type="text"
+                placeholder="Search messages..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="h-9 w-full rounded-md border border-input bg-transparent pl-9 pr-4 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring sm:w-64"
+              />
+            </div>
+            <ExportToolbar data={filteredContacts as any} filename="contacts" />
+          </div>
         </div>
         <div className="rounded-lg border border-border bg-card overflow-x-auto">
           <table className="w-full text-sm">
@@ -30,7 +52,7 @@ function ContactPage() {
               </tr>
             </thead>
             <tbody>
-              {contacts.map((c) => (
+              {filteredContacts.map((c) => (
                 <tr key={c.id} className="border-b border-border/50 last:border-0">
                   <td className="px-5 py-3 text-foreground">{c.name}</td>
                   <td className="px-5 py-3 text-muted-foreground">{c.email}</td>

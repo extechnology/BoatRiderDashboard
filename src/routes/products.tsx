@@ -1,22 +1,43 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { products } from "@/lib/mock-data";
-import { Bike } from "lucide-react";
+import { Search, Bike } from "lucide-react";
 
 export const Route = createFileRoute("/products")({
   component: ProductsPage,
 });
 
 function ProductsPage() {
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredProducts = products.filter((p) => 
+    p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    p.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    p.category.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Products</h1>
-          <p className="text-sm text-muted-foreground">{products.length} bikes in catalog</p>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Products</h1>
+            <p className="text-sm text-muted-foreground">{filteredProducts.length} bikes in catalog</p>
+          </div>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder="Search products..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="h-9 w-full rounded-md border border-input bg-transparent pl-9 pr-4 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring sm:w-64"
+            />
+          </div>
         </div>
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {products.map((p) => (
+          {filteredProducts.map((p) => (
             <div key={p.id} className="rounded-lg border border-border bg-card p-5 space-y-4">
               <div className="flex items-start justify-between">
                 <div>
@@ -34,7 +55,7 @@ function ProductsPage() {
                 </div>
                 <div className="rounded-md bg-secondary/50 px-2.5 py-1.5">
                   <span className="text-muted-foreground">Price</span>
-                  <p className="font-medium text-foreground">${p.price.toLocaleString()}</p>
+                  <p className="font-medium text-foreground">₹{p.price.toLocaleString()}</p>
                 </div>
                 <div className="rounded-md bg-secondary/50 px-2.5 py-1.5">
                   <span className="text-muted-foreground">Suspension</span>

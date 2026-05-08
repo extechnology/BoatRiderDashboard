@@ -1,40 +1,44 @@
+import { useState, useEffect, type FormEvent } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
-import { useAuth } from "@/hooks/use-auth";
 import { Bike, Eye, EyeOff } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
+import { useLogin } from "@/features/auth/hooks";
+import { useAuthQuery } from "@/features/auth/hooks";
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,
 });
 
 function LoginPage() {
-  const { login, isAuthenticated } = useAuth();
+  const { data, isLoading } = useAuthQuery();
+  const isAuthenticated = data?.is_authenticated ?? false;
   const navigate = useNavigate();
+  const loginMutation = useLogin();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  if (isAuthenticated) {
-    navigate({ to: "/" });
-    return null;
-  }
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      navigate({ to: "/login" });
+    }
+  }, [isLoading, isAuthenticated, navigate]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
     setLoading(true);
 
-    setTimeout(() => {
-      const success = login(email, password);
-      if (success) {
-        navigate({ to: "/" });
-      } else {
-        setError("Invalid email or password");
-      }
+    try {
+      await loginMutation.mutateAsync({ identifier: email.trim(), password });
+      navigate({ to: "/" });
+    } catch (err) {
+      setError("Invalid email or password");
+    } finally {
       setLoading(false);
-    }, 600);
+    }
   };
 
   return (
@@ -60,7 +64,7 @@ function LoginPage() {
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-foreground">Email</label>
             <input
-              type="email"
+              type="text"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="admin@boatrider.com"

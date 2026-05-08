@@ -1,16 +1,16 @@
-import { AxiosInstance } from "axios";
+import { axiosInstance } from "@/services/axiosInstance";
 
-export const loginUser = async (axiosInstance: AxiosInstance, identifier: string, password: string) => {
-    const response = await axiosInstance.post("/auth/login", { identifier, password });
+export const loginUser = async (identifier: string, password: string) => {
+    const response = await axiosInstance.post("dashboard/login/", { identifier, password });
     return response.data;
 }
 
-export const logoutUser = async (axiosInstance: AxiosInstance) => {
-    const response = await axiosInstance.post("/admin/auth/logout");
+export const logoutUser = async () => {
+    const response = await axiosInstance.post("dashboard/logout/");
     return response.data;
 }
 
-export const getCurrentUser = async (axiosInstance: AxiosInstance) => {
-    const response = await axiosInstance.get("/admin/auth/me");
-    return response.data;
-}
+export const getCurrentUser = async () => {
+  const response = await axiosInstance.get("dashboard/check-login/");
+  return response.data;
+};

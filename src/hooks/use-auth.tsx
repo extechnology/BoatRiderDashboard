@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
+import { useAuthQuery } from "@/features/auth/hooks";
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -14,19 +15,19 @@ const AuthContext = createContext<AuthContextType>({
   logout: () => {},
 });
 
-const DEMO_ADMIN = { email: "admin@cyclehub.com", password: "admin123" };
+const DEMO_ADMIN = { email: "admin@boatrider.com", password: "admin123" };
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const { data: authData, isLoading } = useAuthQuery();
   const [admin, setAdmin] = useState<{ email: string } | null>(null);
 
   useEffect(() => {
-    const stored = sessionStorage.getItem("cyclehub_auth");
-    if (stored) {
-      try {
-        setAdmin(JSON.parse(stored));
-      } catch {}
+    if (authData?.is_authenticated && authData?.user) {
+      setAdmin(authData.user);
+    } else if (!isLoading) {
+      setAdmin(null);
     }
-  }, []);
+  }, [authData, isLoading]);
 
   const login = (email: string, password: string): boolean => {
     if (email === DEMO_ADMIN.email && password === DEMO_ADMIN.password) {

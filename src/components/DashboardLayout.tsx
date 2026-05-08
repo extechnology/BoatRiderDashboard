@@ -17,18 +17,18 @@ import {
 } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
 import { useAuth } from "@/hooks/use-auth";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const navItems = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
   { to: "/orders", label: "Orders", icon: ShoppingCart },
-  { to: "/products", label: "Products", icon: Package },
+  { to: "/products", label: "Bikes", icon: Package },
+  { to: "/accessories", label: "Accessories", icon: Wrench },
   { to: "/categories", label: "Categories", icon: FolderOpen },
   { to: "/users", label: "Users", icon: Users },
   { to: "/brands", label: "Brands", icon: Tag },
   { to: "/contact", label: "Contact", icon: Mail },
-  { to: "/events", label: "Events", icon: Calendar },
-  { to: "/accessories", label: "Accessories", icon: Wrench },
+  // { to: "/events", label: "Events", icon: Calendar },
 ];
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -38,10 +38,15 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  if (!isAuthenticated) {
-    navigate({ to: "/login" });
-    return null;
-  }
+  // useEffect(() => {
+  //   if (!isAuthenticated) {
+  //     navigate({ to: "/login" });
+  //   }
+  // }, [isAuthenticated, navigate]);
+
+  // if (!isAuthenticated) {
+  //   return null;
+  // }
 
   return (
     <div className="flex min-h-screen bg-background">

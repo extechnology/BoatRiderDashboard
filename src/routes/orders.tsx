@@ -1,22 +1,51 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { Search } from "lucide-react";
+import { Search, ExternalLink, Package, Clock, CreditCard, Download, User, MapPin } from "lucide-react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { ExportToolbar } from "@/components/ExportToolbar";
-import { orders } from "@/lib/mock-data";
+import { useOrders } from "@/features/orders/hooks.orders";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 
 export const Route = createFileRoute("/orders")({
   component: OrdersPage,
 });
 
 function OrdersPage() {
+  const { data: ordersData, isLoading } = useOrders();
   const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("All");
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
 
-  const filteredOrders = orders.filter((o) => 
-    o.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    o.customer.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    o.product.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="flex min-h-[400px] items-center justify-center">
+          <div className="text-center">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto mb-4"></div>
+            <p className="text-sm text-muted-foreground">Loading orders...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  const allOrders = ordersData?.results ?? [];
+
+  const filteredOrders = allOrders.filter((o: any) => {
+    const matchesSearch =
+      o.unique_id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      o.status.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = statusFilter === "All" || o.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
+  const statuses = ["All", "Processing", "Completed", "Pending", "Cancelled"];
 
   return (
     <DashboardLayout>
@@ -24,58 +53,213 @@ function OrdersPage() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="text-2xl font-bold text-foreground">Orders</h1>
-            <p className="text-sm text-muted-foreground">{filteredOrders.length} total orders</p>
+            <p className="text-sm text-muted-foreground">{filteredOrders.length} total orders found</p>
           </div>
           <div className="flex items-center gap-3">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <input
                 type="text"
-                placeholder="Search orders..."
+                placeholder="Search by ID or status..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="h-9 w-full rounded-md border border-input bg-transparent pl-9 pr-4 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring sm:w-64"
               />
             </div>
-            <ExportToolbar data={filteredOrders as any} filename="orders" />
+            <ExportToolbar data={filteredOrders} filename="orders" />
           </div>
         </div>
+
+        {/* Filter Tabs */}
+        <div className="flex flex-wrap gap-2">
+          {statuses.map((status) => (
+            <button
+              key={status}
+              onClick={() => setStatusFilter(status)}
+              className={`rounded-full px-4 py-1.5 text-xs font-medium transition-all ${
+                statusFilter === status
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "bg-secondary/50 text-muted-foreground hover:bg-secondary hover:text-foreground"
+              }`}
+            >
+              {status}
+            </button>
+          ))}
+        </div>
+
         <div className="rounded-lg border border-border bg-card overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border text-left text-muted-foreground">
-                <th className="px-5 py-3 font-medium">Order</th>
-                <th className="px-5 py-3 font-medium">Customer</th>
-                <th className="px-5 py-3 font-medium">Email</th>
-                <th className="px-5 py-3 font-medium">Product</th>
+                <th className="px-5 py-3 font-medium">Order ID</th>
+                <th className="px-5 py-3 font-medium">Items</th>
+                <th className="px-5 py-3 font-medium">Products</th>
                 <th className="px-5 py-3 font-medium">Amount</th>
                 <th className="px-5 py-3 font-medium">Status</th>
                 <th className="px-5 py-3 font-medium">Date</th>
               </tr>
             </thead>
             <tbody>
-              {filteredOrders.map((o) => (
-                <tr key={o.id} className="border-b border-border/50 last:border-0">
-                  <td className="px-5 py-3 font-mono text-foreground">{o.id}</td>
-                  <td className="px-5 py-3 text-foreground">{o.customer}</td>
-                  <td className="px-5 py-3 text-muted-foreground">{o.email}</td>
-                  <td className="px-5 py-3 text-muted-foreground">{o.product}</td>
-                  <td className="px-5 py-3 text-foreground">₹{o.amount.toLocaleString()}</td>
-                  <td className="px-5 py-3">
-                    <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
-                      o.status === "completed" ? "bg-success/10 text-success" :
-                      o.status === "shipped" ? "bg-primary/10 text-primary" :
-                      o.status === "pending" ? "bg-warning/10 text-warning" :
-                      "bg-destructive/10 text-destructive"
-                    }`}>{o.status}</span>
+              {filteredOrders.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-5 py-10 text-center text-muted-foreground">
+                    No orders found matching your search.
                   </td>
-                  <td className="px-5 py-3 text-muted-foreground">{o.date}</td>
                 </tr>
-              ))}
+              ) : (
+                filteredOrders.map((o: any) => (
+                  <tr
+                    key={o.id}
+                    onClick={() => setSelectedOrder(o)}
+                    className="border-b border-border/50 last:border-0 hover:bg-secondary/20 transition-colors cursor-pointer"
+                  >
+                    <td className="px-5 py-3 font-mono text-xs text-foreground">
+                      {o.unique_id.split("-")[1] || o.unique_id}
+                    </td>
+                    <td className="px-5 py-3 text-foreground">{o.total_items}</td>
+                    <td className="px-5 py-3 text-muted-foreground">
+                      <div className="max-w-[200px] truncate">
+                        {o.all_products?.[0]?.bike?.name || o.all_products?.[0]?.accessory?.name || "Order Item"}
+                        {(o.all_products?.length ?? 0) > 1 && ` +${o.all_products.length - 1} more`}
+                      </div>
+                    </td>
+                    <td className="px-5 py-3 font-medium text-foreground">
+                      ₹{Number(o.total_amount).toLocaleString("en-IN")}
+                    </td>
+                    <td className="px-5 py-3">
+                      <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                        o.status?.toLowerCase() === "completed" ? "bg-success/10 text-success" :
+                        o.status?.toLowerCase() === "processing" ? "bg-primary/10 text-primary" :
+                        o.status?.toLowerCase() === "pending" ? "bg-warning/10 text-warning" :
+                        "bg-destructive/10 text-destructive"
+                      }`}>
+                        {o.status}
+                      </span>
+                    </td>
+                    <td className="px-5 py-3 text-muted-foreground">
+                      {new Date(o.created_at).toLocaleDateString("en-IN", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric"
+                      })}
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
       </div>
+
+      <Sheet open={!!selectedOrder} onOpenChange={(open) => !open && setSelectedOrder(null)}>
+        <SheetContent className="sm:max-w-md overflow-y-auto">
+          <SheetHeader className="mb-6">
+            <SheetTitle className="text-xl">Order Details</SheetTitle>
+            <SheetDescription className="font-mono text-xs">
+              {selectedOrder?.unique_id}
+            </SheetDescription>
+          </SheetHeader>
+
+          {selectedOrder && (
+            <div className="space-y-6">
+              {/* Status Section */}
+              <div className="flex items-center justify-between rounded-lg border border-border p-4 bg-secondary/10">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+                    <Clock className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Status</p>
+                    <p className="text-sm font-semibold text-foreground">{selectedOrder.status}</p>
+                  </div>
+                </div>
+                <span className={`rounded-full px-3 py-1 text-xs font-bold ${
+                  selectedOrder.payment_status ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"
+                }`}>
+                  {selectedOrder.payment_status ? "PAID" : "UNPAID"}
+                </span>
+              </div>
+
+              {/* Items Section */}
+              <div className="space-y-4">
+                <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                  <Package className="h-4 w-4" />
+                  Order Items ({selectedOrder.total_items})
+                </h3>
+                <div className="space-y-3">
+                  {selectedOrder.all_products?.map((item: any) => (
+                    <div key={item.id} className="flex gap-4 rounded-lg border border-border/50 p-3">
+                      <div className="h-16 w-16 overflow-hidden rounded-md bg-secondary/20 flex-shrink-0">
+                        {item.image ? (
+                          <img src={item.image} alt="product" className="h-full w-full object-cover" />
+                        ) : (
+                          <div className="h-full w-full flex items-center justify-center text-muted-foreground">
+                            <Package className="h-8 w-8" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-foreground truncate">
+                          {item.bike?.name || item.accessory?.name || "Product"}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {item.bike?.brand || item.accessory?.brand} {item.size && `· Size: ${item.size}`} {item.color && `· ${item.color}`}
+                        </p>
+                        <div className="mt-1 flex items-center justify-between">
+                          <p className="text-xs font-semibold text-foreground">
+                            ₹{Number(item.price).toLocaleString("en-IN")} <span className="font-normal text-muted-foreground">x {item.quantity}</span>
+                          </p>
+                          <p className="text-sm font-bold text-primary">
+                            ₹{Number(item.subtotal).toLocaleString("en-IN")}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Customer & Payment Info */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <p className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
+                    <User className="h-3 w-3" /> Customer ID
+                  </p>
+                  <p className="text-sm font-semibold text-foreground">{selectedOrder.user}</p>
+                </div>
+                <div className="space-y-1.5">
+                  <p className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
+                    <CreditCard className="h-3 w-3" /> Total Amount
+                  </p>
+                  <p className="text-sm font-bold text-foreground">₹{Number(selectedOrder.total_amount).toLocaleString("en-IN")}</p>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="pt-4 space-y-3">
+                {selectedOrder.invoice && (
+                  <a
+                    href={selectedOrder.invoice}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+                  >
+                    <Download className="h-4 w-4" />
+                    Download Invoice
+                  </a>
+                )}
+                <div className="flex items-center gap-2 text-xs text-muted-foreground justify-center">
+                  <Clock className="h-3 w-3" />
+                  Ordered on {new Date(selectedOrder.created_at).toLocaleString("en-IN", {
+                    dateStyle: "medium",
+                    timeStyle: "short"
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
     </DashboardLayout>
   );
-}
+}

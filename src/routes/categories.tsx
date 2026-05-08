@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { categories } from "@/lib/mock-data";
 import { Search, FolderOpen } from "lucide-react";
+import { useCategoriesQuery } from "@/features/categories/hooks.categories";
 
 export const Route = createFileRoute("/categories")({
   component: CategoriesPage,
@@ -10,10 +10,12 @@ export const Route = createFileRoute("/categories")({
 
 function CategoriesPage() {
   const [searchQuery, setSearchQuery] = useState("");
+  const { data: categoriesData, isLoading } = useCategoriesQuery();
 
-  const filteredCategories = categories.filter((c) => 
-    c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    c.description.toLowerCase().includes(searchQuery.toLowerCase())
+  const results = categoriesData?.results || [];
+
+  const filteredCategories = results.filter((c: any) =>
+    c.category_name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
@@ -35,23 +37,54 @@ function CategoriesPage() {
             />
           </div>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {filteredCategories.map((c) => (
-            <div key={c.id} className="rounded-lg border border-border bg-card p-5">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                  <FolderOpen className="h-5 w-5 text-primary" />
+
+        {isLoading ? (
+          <div className="flex h-64 items-center justify-center">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+          </div>
+        ) : (
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {filteredCategories.length > 0 ? (
+              filteredCategories.map((c: any) => (
+                <div key={c.category_name} className="group overflow-hidden rounded-xl border border-border bg-card transition-all hover:shadow-md">
+                  <div className="aspect-video w-full overflow-hidden bg-muted">
+                    {c.category_image ? (
+                      <img 
+                        src={c.category_image} 
+                        alt={c.category_name} 
+                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center">
+                        <FolderOpen className="h-10 w-10 text-muted-foreground/20" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-5">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                        <FolderOpen className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-foreground">{c.category_name}</h3>
+                        <p className="text-xs text-muted-foreground">
+                          Created {new Date(c.created).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-semibold text-foreground">{c.name}</h3>
-                  <p className="text-xs text-muted-foreground">{c.productCount} products</p>
-                </div>
+              ))
+            ) : (
+              <div className="col-span-full flex flex-col items-center justify-center py-20 text-center">
+                <FolderOpen className="mb-4 h-12 w-12 text-muted-foreground/20" />
+                <h3 className="text-lg font-medium text-foreground">No categories found</h3>
+                <p className="text-sm text-muted-foreground">Try adjusting your search query.</p>
               </div>
-              <p className="mt-3 text-sm text-muted-foreground">{c.description}</p>
-            </div>
-          ))}
-        </div>
+            )}
+          </div>
+        )}
       </div>
     </DashboardLayout>
   );
-}
+}

@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { products } from "@/lib/mock-data";
 import { Search, Bike } from "lucide-react";
+import { useProductsQuery } from "@/features/products/hooks.products";
 
 export const Route = createFileRoute("/products")({
   component: ProductsPage,
@@ -10,8 +10,11 @@ export const Route = createFileRoute("/products")({
 
 function ProductsPage() {
   const [searchQuery, setSearchQuery] = useState("");
+  const { data: productsData, isLoading } = useProductsQuery();
 
-  const filteredProducts = products.filter((p) => 
+  const results = productsData?.results || [];
+
+  const filteredProducts = results.filter((p: any) => 
     p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     p.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
     p.category.toLowerCase().includes(searchQuery.toLowerCase())
@@ -22,75 +25,94 @@ function ProductsPage() {
       <div className="space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Products</h1>
+            <h1 className="text-2xl font-bold text-foreground">Bikes</h1>
             <p className="text-sm text-muted-foreground">{filteredProducts.length} bikes in catalog</p>
           </div>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <input
               type="text"
-              placeholder="Search products..."
+              placeholder="Search bikes..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="h-9 w-full rounded-md border border-input bg-transparent pl-9 pr-4 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring sm:w-64"
             />
           </div>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {filteredProducts.map((p) => (
-            <div key={p.id} className="rounded-lg border border-border bg-card p-5 space-y-4">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h3 className="font-semibold text-foreground">{p.name}</h3>
-                  <p className="text-xs text-muted-foreground">{p.brand} · {p.model}</p>
+
+        {isLoading ? (
+          <div className="flex h-64 items-center justify-center">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+          </div>
+        ) : (
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {filteredProducts.length > 0 ? (
+              filteredProducts.map((p: any) => (
+                <div key={p.name + p.brand} className="group overflow-hidden rounded-xl border border-border bg-card transition-all hover:shadow-md">
+                  <div className="aspect-[16/10] w-full overflow-hidden bg-muted">
+                    {p.image_url ? (
+                      <img 
+                        src={p.image_url} 
+                        alt={p.name} 
+                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center">
+                        <Bike className="h-12 w-12 text-muted-foreground/20" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-5 space-y-4">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <h3 className="font-semibold text-foreground leading-tight">{p.name}</h3>
+                        <p className="text-xs text-muted-foreground mt-1">{p.brand} · {p.category}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-lg font-bold text-primary">₹{Number(p.price).toLocaleString()}</p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Material</p>
+                        <p className="text-xs font-medium text-foreground">{Array.isArray(p.material) ? p.material.join(", ") : p.material}</p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Wheel Size</p>
+                        <p className="text-xs font-medium text-foreground">{Array.isArray(p.wheel_size) ? p.wheel_size.join(", ") : p.wheel_size}</p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Suspension</p>
+                        <p className="text-xs font-medium text-foreground">{Array.isArray(p.suspension) ? p.suspension.join(", ") : p.suspension}</p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Status</p>
+                        <span className={`text-xs font-bold ${p.stock < 5 ? "text-destructive" : "text-success"}`}>
+                          {p.stock} in stock
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="border-t border-border pt-4">
+                      <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+                        {p.description}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                  <Bike className="h-5 w-5 text-primary" />
-                </div>
+              ))
+            ) : (
+              <div className="col-span-full flex flex-col items-center justify-center py-20 text-center">
+                <Bike className="mb-4 h-12 w-12 text-muted-foreground/20" />
+                <h3 className="text-lg font-medium text-foreground">No bikes found</h3>
+                <p className="text-sm text-muted-foreground">Try adjusting your search query.</p>
               </div>
-              <div className="grid grid-cols-2 gap-2 text-xs">
-                <div className="rounded-md bg-secondary/50 px-2.5 py-1.5">
-                  <span className="text-muted-foreground">Category</span>
-                  <p className="font-medium text-foreground">{p.category}</p>
-                </div>
-                <div className="rounded-md bg-secondary/50 px-2.5 py-1.5">
-                  <span className="text-muted-foreground">Price</span>
-                  <p className="font-medium text-foreground">₹{p.price.toLocaleString()}</p>
-                </div>
-                <div className="rounded-md bg-secondary/50 px-2.5 py-1.5">
-                  <span className="text-muted-foreground">Suspension</span>
-                  <p className="font-medium text-foreground">{p.suspension}</p>
-                </div>
-                <div className="rounded-md bg-secondary/50 px-2.5 py-1.5">
-                  <span className="text-muted-foreground">Frame</span>
-                  <p className="font-medium text-foreground">{p.frameMaterial}</p>
-                </div>
-                <div className="rounded-md bg-secondary/50 px-2.5 py-1.5">
-                  <span className="text-muted-foreground">Wheel</span>
-                  <p className="font-medium text-foreground">{p.wheelSize}</p>
-                </div>
-                <div className="rounded-md bg-secondary/50 px-2.5 py-1.5">
-                  <span className="text-muted-foreground">Gears</span>
-                  <p className="font-medium text-foreground">{p.gears}-speed</p>
-                </div>
-              </div>
-              <div>
-                <p className="mb-1.5 text-xs text-muted-foreground">Accessories</p>
-                <div className="flex flex-wrap gap-1">
-                  {p.accessories.map((a) => (
-                    <span key={a} className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">{a}</span>
-                  ))}
-                </div>
-              </div>
-              <div className="flex items-center justify-between border-t border-border pt-3">
-                <span className={`text-xs font-medium ${p.stock < 6 ? "text-destructive" : "text-success"}`}>
-                  {p.stock} in stock
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
+            )}
+          </div>
+        )}
       </div>
     </DashboardLayout>
   );
 }
+

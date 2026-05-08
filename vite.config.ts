@@ -6,4 +6,18 @@
 // You can pass additional config via defineConfig({ vite: { ... } }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
-export default defineConfig();
+export default defineConfig({
+  vite: {
+    server: {
+      proxy: {
+        "/api": {
+          target: "https://tgg4qp85-8000.inc1.devtunnels.ms",
+          changeOrigin: true,
+          secure: false,
+          rewrite: (path) => path.replace(/^\/api/, "/api"),
+        },
+      },
+    },
+  },
+});
+

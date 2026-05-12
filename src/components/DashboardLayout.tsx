@@ -65,7 +65,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         }`}
       >
         <div className="flex h-14 items-center gap-2 border-b border-border px-4">
-          <Bike className="h-6 w-6 text-primary" />
+          {/* <img src="/black-logo.png" alt="" /> */}
           <span className="text-lg font-bold text-foreground">BoatRider</span>
         </div>
 

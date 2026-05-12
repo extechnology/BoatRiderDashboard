@@ -4,6 +4,7 @@ import { Search, User } from "lucide-react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { ExportToolbar } from "@/components/ExportToolbar";
 import { useUsersQuery } from "@/features/users/hooks.users";
+import { type DateFilter, filterByDate } from "@/lib/export-utils";
 
 export const Route = createFileRoute("/users")({
   component: UsersPage,
@@ -12,6 +13,8 @@ export const Route = createFileRoute("/users")({
 function UsersPage() {
   const { data: usersData, isLoading } = useUsersQuery();
   const [searchQuery, setSearchQuery] = useState("");
+  const [dateFilter, setDateFilter] = useState<DateFilter | "all">("all");
+  const [customDate, setCustomDate] = useState("");
 
   if (isLoading) {
     return (
@@ -31,7 +34,11 @@ function UsersPage() {
   const filteredUsers = allUsers.filter((u: any) =>
     (u.username?.toLowerCase() || "").includes(searchQuery.toLowerCase()) ||
     (u.email?.toLowerCase() || "").includes(searchQuery.toLowerCase())
-  );
+  ).filter((u: any) => {
+    if (dateFilter === "all") return true;
+    const filtered = filterByDate([u], dateFilter, "date_joined", customDate);
+    return filtered.length > 0;
+  });
 
   return (
     <DashboardLayout>
@@ -52,7 +59,30 @@ function UsersPage() {
                 className="h-9 w-full rounded-md border border-input bg-transparent pl-9 pr-4 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring sm:w-64"
               />
             </div>
-            <ExportToolbar data={filteredUsers} filename="users" />
+            <div className="flex items-center gap-1 rounded-md border border-border bg-secondary/50 p-0.5">
+              {(["all", "today", "this-month", "custom"] as const).map((f) => (
+                <button
+                  key={f}
+                  onClick={() => setDateFilter(f)}
+                  className={`rounded px-3 py-1.5 text-xs font-medium transition-colors ${
+                    dateFilter === f
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {f === "all" ? "All" : f === "today" ? "Today" : f === "this-month" ? "This Month" : "Custom"}
+                </button>
+              ))}
+            </div>
+            {dateFilter === "custom" && (
+              <input
+                type="date"
+                value={customDate}
+                onChange={(e) => setCustomDate(e.target.value)}
+                className="h-9 rounded-md border border-input bg-transparent px-3 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              />
+            )}
+            <ExportToolbar data={filteredUsers} filename="users" dateField="date_joined" showFilter={false} />
           </div>
         </div>
 

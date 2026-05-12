@@ -11,7 +11,7 @@ export default defineConfig({
     server: {
       proxy: {
         "/api": {
-          target: "https://tgg4qp85-8000.inc1.devtunnels.ms",
+          target: "https://server.boatridersports.in/",
           changeOrigin: true,
           secure: false,
           rewrite: (path) => path.replace(/^\/api/, "/api"),

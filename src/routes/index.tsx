@@ -105,7 +105,7 @@ function Index() {
                 />
 
                 <Tooltip
-                  formatter={(value: number) => `₹${value.toLocaleString("en-IN")}`}
+                  formatter={(value: any) => `₹${Number(value).toLocaleString("en-IN")}`}
                   contentStyle={{
                     backgroundColor: "oklch(0.17 0.02 260)",
                     border: "1px solid oklch(0.25 0.02 260)",

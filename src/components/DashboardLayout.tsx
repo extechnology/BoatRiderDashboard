@@ -11,9 +11,9 @@ import {
   Wrench,
   Sun,
   Moon,
-  Menu,
-  Bike,
   LogOut,
+  Menu,
+  X,
 } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
 import { useAuth } from "@/hooks/use-auth";
@@ -28,25 +28,46 @@ const navItems = [
   { to: "/users", label: "Users", icon: Users },
   { to: "/brands", label: "Brands", icon: Tag },
   { to: "/contact", label: "Contact", icon: Mail },
-  // { to: "/events", label: "Events", icon: Calendar },
+  { to: "/events", label: "Events", icon: Calendar },
 ];
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, admin, logout } = useAuth();
+  const { isAuthenticated, isLoading, admin, logout } = useAuth();
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // useEffect(() => {
-  //   if (!isAuthenticated) {
-  //     navigate({ to: "/login" });
-  //   }
-  // }, [isAuthenticated, navigate]);
+  // Authentication guard: redirect unauthorized users to /login
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      navigate({ to: "/login" });
+    }
+  }, [isLoading, isAuthenticated, navigate]);
 
-  // if (!isAuthenticated) {
-  //   return null;
-  // }
+  // Loading state while auth is being verified
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-9 w-9 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          <p className="text-sm font-medium text-muted-foreground animate-pulse">
+            Verifying staff authentication...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // If not authenticated, do not render layout content
+  if (!isAuthenticated) {
+    return null;
+  }
+
+  const handleSignOut = async () => {
+    await logout();
+    navigate({ to: "/login" });
+  };
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -64,9 +85,19 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <div className="flex h-14 items-center gap-2 border-b border-border px-4">
-          {/* <img src="/black-logo.png" alt="" /> */}
-          <span className="text-lg font-bold text-foreground">BoatRider</span>
+        <div className="flex h-14 items-center justify-between border-b border-border px-4">
+          <div className="flex items-center gap-2">
+            <span className="text-lg font-bold text-foreground tracking-tight">Boatrider</span>
+            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+              Admin
+            </span>
+          </div>
+          <button
+            onClick={() => setSidebarOpen(false)}
+            className="lg:hidden text-muted-foreground hover:text-foreground"
+          >
+            <X className="h-5 w-5" />
+          </button>
         </div>
 
         <nav className="flex-1 space-y-0.5 overflow-y-auto p-3">
@@ -79,7 +110,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                 onClick={() => setSidebarOpen(false)}
                 className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
                   isActive
-                    ? "bg-primary/10 text-primary"
+                    ? "bg-primary/10 text-primary font-semibold"
                     : "text-muted-foreground hover:bg-secondary hover:text-foreground"
                 }`}
               >
@@ -90,9 +121,14 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           })}
         </nav>
 
-        <div className="border-t border-border p-3">
+        <div className="border-t border-border p-3 space-y-1">
           <div className="mb-2 px-3 py-1">
-            <p className="truncate text-xs font-medium text-foreground">{admin?.email}</p>
+            <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">
+              Signed in as
+            </p>
+            <p className="truncate text-xs font-medium text-foreground">
+              {admin?.email || "Staff Member"}
+            </p>
           </div>
           <button
             onClick={toggleTheme}
@@ -102,7 +138,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             {theme === "dark" ? "Light Mode" : "Dark Mode"}
           </button>
           <button
-            onClick={() => { logout(); navigate({ to: "/login" }); }}
+            onClick={handleSignOut}
             className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm text-destructive transition-colors hover:bg-destructive/10"
           >
             <LogOut className="h-4 w-4" />
@@ -111,18 +147,33 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         </div>
       </aside>
 
-      {/* Main content */}
-      <div className="flex flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border bg-background/80 px-4 backdrop-blur-md lg:px-6">
-          <button
-            onClick={() => setSidebarOpen(true)}
-            className="text-muted-foreground hover:text-foreground lg:hidden"
-          >
-            <Menu className="h-5 w-5" />
-          </button>
-          <div className="flex-1" />
+      {/* Main Content Area */}
+      <div className="flex flex-1 flex-col overflow-hidden">
+        {/* Mobile topbar */}
+        <header className="flex h-14 items-center justify-between border-b border-border px-4 lg:hidden">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="rounded-md p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+            <span className="font-bold text-foreground">Boatrider</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={toggleTheme}
+              className="rounded-md p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground"
+            >
+              {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </button>
+          </div>
         </header>
-        <main className="flex-1 p-4 lg:p-6">{children}</main>
+
+        {/* Page children container */}
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
+          {children}
+        </main>
       </div>
     </div>
   );

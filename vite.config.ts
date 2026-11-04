@@ -11,13 +11,18 @@ export default defineConfig({
     server: {
       proxy: {
         "/api": {
-          target: "https://server.boatridersports.in/",
+          target: "https://server.boatridersports.in",
           changeOrigin: true,
           secure: false,
-          rewrite: (path) => path.replace(/^\/api/, "/api"),
+          cookieDomainRewrite: "localhost",
+        },
+        "/dashboard": {
+          target: "https://server.boatridersports.in/api",
+          changeOrigin: true,
+          secure: false,
+          cookieDomainRewrite: "localhost",
         },
       },
     },
   },
 });
-

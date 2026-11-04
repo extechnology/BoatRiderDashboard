@@ -1,9 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { Search, ExternalLink, Package, Clock, CreditCard, Download, User, MapPin } from "lucide-react";
+import { Search, ExternalLink, Package, Clock, CreditCard, Download, User, MapPin, RefreshCw } from "lucide-react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { ExportToolbar } from "@/components/ExportToolbar";
 import { useOrders } from "@/features/orders/hooks.orders";
+import { ErrorState } from "@/components/ui/error-state";
+import { TableRowSkeleton } from "@/components/ui/skeleton-loaders";
+import { Button } from "@/components/ui/button";
 import {
   Sheet,
   SheetContent,
@@ -22,7 +25,7 @@ export const Route = createFileRoute("/orders")({
 });
 
 function OrdersPage() {
-  const { data: ordersData, isLoading } = useOrders();
+  const { data: ordersData, isLoading, isError, error, refetch, isRefetching } = useOrders();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [dateFilter, setDateFilter] = useState<DateFilter | "all">("all");
@@ -49,11 +52,27 @@ function OrdersPage() {
   if (isLoading) {
     return (
       <DashboardLayout>
-        <div className="flex min-h-[400px] items-center justify-center">
-          <div className="text-center">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto mb-4"></div>
-            <p className="text-sm text-muted-foreground">Loading orders...</p>
+        <div className="space-y-6">
+          <div className="h-8 w-48 rounded bg-muted animate-pulse" />
+          <div className="rounded-lg border border-border bg-card">
+            <TableRowSkeleton cols={6} rows={6} />
           </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (isError) {
+    return (
+      <DashboardLayout>
+        <div className="space-y-6">
+          <h1 className="text-2xl font-bold text-foreground">Orders</h1>
+          <ErrorState
+            error={error}
+            title="Unable to Load Orders"
+            onRetry={() => refetch()}
+            isRetrying={isRefetching}
+          />
         </div>
       </DashboardLayout>
     );
@@ -102,7 +121,17 @@ function OrdersPage() {
             <h1 className="text-2xl font-bold text-foreground">Orders</h1>
             <p className="text-sm text-muted-foreground">{filteredOrders.length} total orders found</p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => refetch()}
+              disabled={isRefetching || isLoading}
+              className="gap-1.5 text-xs"
+            >
+              <RefreshCw className={`h-3.5 w-3.5 ${isRefetching ? "animate-spin" : ""}`} />
+              Refresh
+            </Button>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <input
